@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 void key_generator( char* key, char* k1, char* k2 )
 {
   char p [10] = {key[4], key[1], key[6], key[3], key[2], key[0], key[8], key[7], key[5], key[9]} ;
@@ -77,32 +76,45 @@ void to_char( int x, char* result )
 void f_function( char* text, char* key, char* result )
 {
 
-  char expand [8] = {text[3], text[0], text[1], text[2], text[1], text[2], text[3], text[0]} ;
+  char expand [8] = {text[7], text[4], text[5], text[6], text[5], text[6], text[7], text[4]} ;
   int s0 [4][4] = { {1, 0, 3, 2}, {3, 2, 1, 0}, {0, 2, 1, 3}, {3, 1, 3, 2} } ;
   int s1 [4][4] = { {0, 1, 2, 3}, {2, 0, 1, 3}, {3, 0, 1, 0}, {2, 1, 0, 3} } ;
   char p4 [4] = {1, 3, 2, 0} ;
-  char xord [9] ;
+  char buffer [9] ;
+  char buffer2 [4] ;
   int i ;
   int row ;
   int col ;
-  char s_result [4] ;
   
-  memset(s_result, '\0', sizeof(s_result)) ;
+  memset(buffer2, '\0', sizeof(buffer2)) ;
   
-  xor_function( expand, key, xord, 8 ) ;
+  //Add to key
+  xor_function( expand, key, buffer, 8 ) ;
   
-  row = to_int( xord[0], xord[3] ) ;
-  col = to_int( xord[1], xord[2] ) ;
-  to_char( s0[row][col], s_result ) ;
+  //SO
+  row = to_int( buffer[0], buffer[3] ) ;
+  col = to_int( buffer[1], buffer[2] ) ;
+  to_char( s0[row][col], buffer2 ) ;
   
-  row = to_int( xord[4], xord[7] ) ;
-  col = to_int( xord[5], xord[6] ) ;
-  to_char( s1[row][col], s_result ) ;
+  //S!
+  row = to_int( buffer[4], buffer[7] ) ;
+  col = to_int( buffer[5], buffer[6] ) ;
+  to_char( s1[row][col], buffer2 ) ;
   
+  //Permute
   for (i = 0; i < 4; i++)
-    strcat( result, &s_result[ p4[i] ] ) ;
+    buffer[i] = buffer2[ p4[i] ] ;
+
+  //Add to L
+  xor_function( text, buffer, buffer2, 4 ) ;
+  buffer2[4] = '\0' ;
   
-  printf("%s\n", xord) ;  
+  //Return L
+  strcat( result, buffer2 ); 
+
+  //Return R
+  for (i = 0; i < 4; i++)
+    result[i+4] = text[i+4] ;
 
 }
 
@@ -112,7 +124,6 @@ void switch_function( char* text, char* result )
   
   for (i = 0; i < 8; i++) 
     result[i] = text[ (i+4) % 8 ] ;
-    
 }
 
 int main( int argc, char* argv[] ) 
@@ -122,29 +133,32 @@ int main( int argc, char* argv[] )
   char buffer1 [9] ;
   char buffer2 [9] ;
   char f_result [9] ;
-  
-  memset(f_result, '\0', sizeof(f_result)) ;
-  
+ 
+  //Add to vector 
   xor_function( argv[2], argv[3], buffer1, 8 ) ;
   
+  //Initial permutation
   initial_final_permutations( buffer1, buffer2, 0 ) ;
-  buffer2[8] = '\0';
-  printf("initperm: %s\n", buffer2) ;
   
+  //Generate Keys
   key_generator( argv[1], k1, k2 ) ;  
-  printf("k1: %s     k2:%s\n", k1, k2) ;
   
+  //fk1
+  memset( f_result, '\0', sizeof(f_result) ) ;
   f_function( buffer2, k1, f_result) ;
+
+  //Switch
+  switch_function( f_result, buffer1 ) ;
   
-  switch_function( buffer2, buffer1 ) ;
-  
+  //fk2
+  memset(f_result, '\0', sizeof(f_result)) ;
   f_function( buffer1, k2, f_result ) ;
   
+  //Final Permutation
   initial_final_permutations( f_result, buffer1, 1 ) ; 
   
   buffer1[8] = '\0' ;
   
   printf("%s\n", buffer1) ;
   
-
 }
