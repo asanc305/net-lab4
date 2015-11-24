@@ -126,22 +126,18 @@ void switch_function( char* text, char* result )
     result[i] = text[ (i+4) % 8 ] ;
 }
 
-int main( int argc, char* argv[] ) 
+void encrypt( char* k1, char* k2, char* plaintext, char* vector, char* result ) 
 {
-  char k1 [9] ;
-  char k2 [9] ;
   char buffer1 [9] ;
   char buffer2 [9] ;
   char f_result [9] ;
  
   //Add to vector 
-  xor_function( argv[2], argv[3], buffer1, 8 ) ;
+  xor_function( plaintext, vector, buffer1, 8 ) ;
   
   //Initial permutation
   initial_final_permutations( buffer1, buffer2, 0 ) ;
-  
-  //Generate Keys
-  key_generator( argv[1], k1, k2 ) ;  
+    
   
   //fk1
   memset( f_result, '\0', sizeof(f_result) ) ;
@@ -155,10 +151,52 @@ int main( int argc, char* argv[] )
   f_function( buffer1, k2, f_result ) ;
   
   //Final Permutation
-  initial_final_permutations( f_result, buffer1, 1 ) ; 
+  initial_final_permutations( f_result, result, 1 ) ;   
+}
+
+int main( int argc, char* argv[] )
+{
+  char k1 [9] ;
+  char k2 [9] ;
+  char plaintext[9] ;
+  char space[1] ;
+  char buffer1 [9] ;
+  char buffer2 [9] ;
+  int bytes_read ;
+  FILE* input_file ;
+  FILE* output_file ;
   
-  buffer1[8] = '\0' ;
   
-  printf("%s\n", buffer1) ;
+  //Generate Keys
+  key_generator( argv[1], k1, k2 ) ;
+  
+  //open files
+  input_file = fopen( argv[3], "rb" ) ;
+  output_file = fopen( argv[4], "wb" ) ;  
+  
+  //check files
+  if(input_file == NULL || output_file == NULL)
+  {
+    printf("Error opening file\n") ;
+    return -1 ;
+  }
+  
+  //read first byte
+  bytes_read = fread( plaintext, 1, 8, input_file ) ;  
+  //bytes_read = fread( space, 1, 1, input_file ) ;
+  strcpy( buffer1, argv[2] ) ;
+  
+  while( bytes_read > 0 )
+  {
+    encrypt( k1, k2, plaintext, buffer1, buffer2 ) ;
+    fwrite( buffer2, 1, 8, output_file ) ;
+    //fwrite( space, 1, 1, output_file ) ;
+    
+    memset( plaintext, '\0', sizeof(plaintext) ) ;
+    bytes_read = fread( plaintext, 1, 8, input_file ) ;
+    //bytes_read = fread( space, 1, 1, input_file ) ;
+    strcpy( buffer1, buffer2 ) ;    
+  }
+  
   
 }
