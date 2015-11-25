@@ -2,6 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define GetBit(var, bit) ((var & (1 << bit)) != 0)
+#define SetBit(var, bit) (var |= (1 << bit))
+
+struct {
+  unsigned char a : 8 ;
+} Ag ;
+
 void key_generator( char* key, char* k1, char* k2 )
 {
   char p [10] = {key[4], key[1], key[6], key[3], key[2], key[0], key[8], key[7], key[5], key[9]} ;
@@ -126,7 +133,7 @@ void switch_function( char* text, char* result )
     result[i] = text[ (i+4) % 8 ] ;
 }
 
-void encrypt( char* k1, char* k2, char* plaintext, char* vector, char* result ) 
+void encrypt( char* k1, char* k2, unsigned char* plaintext, unsigned char* vector, char* result ) 
 {
   char buffer1 [9] ;
   char buffer2 [9] ;
@@ -158,15 +165,29 @@ int main( int argc, char* argv[] )
 {
   char k1 [9] ;
   char k2 [9] ;
-  char plaintext[9] ;
+  unsigned char plaintext ;
   char space[1] ;
-  char buffer1 [9] ;
-  char buffer2 [9] ;
+  unsigned char buffer1 ;
+  unsigned char buffer2 ;
   int bytes_read ;
   FILE* input_file ;
   FILE* output_file ;
   
+  buffer1 = strtol( argv[1], 0, 2 ) ;
+  buffer2 = 'a' ;
   
+  buffer1 = buffer1 ^ buffer2 ;
+  int i ;
+  for (i=7; i>=0; i--)
+  {
+    if (GetBit(buffer1,i))
+      printf("1") ;
+    else
+      printf("0") ;  
+  }
+  printf("\n") ;
+  
+  /*
   //Generate Keys
   key_generator( argv[1], k1, k2 ) ;
   
@@ -182,21 +203,30 @@ int main( int argc, char* argv[] )
   }
   
   //read first byte
-  bytes_read = fread( plaintext, 1, 8, input_file ) ;  
-  //bytes_read = fread( space, 1, 1, input_file ) ;
-  strcpy( buffer1, argv[2] ) ;
+  bytes_read = fread( &plaintext, 1, 1, input_file ) ;  
+
+  buffer1 = strtol( argv[2], 0, 2 ) ;
   
   while( bytes_read > 0 )
   {
     encrypt( k1, k2, plaintext, buffer1, buffer2 ) ;
-    fwrite( buffer2, 1, 8, output_file ) ;
-    //fwrite( space, 1, 1, output_file ) ;
+    //fwrite( buffer2, 1, 8, output_file ) ;
     
     memset( plaintext, '\0', sizeof(plaintext) ) ;
-    bytes_read = fread( plaintext, 1, 8, input_file ) ;
-    //bytes_read = fread( space, 1, 1, input_file ) ;
+    bytes_read = fread( plaintext, 1, 1, input_file ) ;
     strcpy( buffer1, buffer2 ) ;    
   }
+  */
+  /*
+  int i ;
+  for (i=7; i>=0; i--)
+  {
+    if (GetBit(plaintext,i))
+      printf("1") ;
+    else
+      printf("0") ;  
+  }
+  printf("\n") ;*/
   
   
 }
