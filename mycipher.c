@@ -180,11 +180,8 @@ unsigned char decrypt( unsigned char k1, unsigned char k2, unsigned char ciphert
   unsigned char buffer1 ;
   unsigned char buffer2 ;
   
-  //Add to vector 
-  buffer1 = ciphertext ^ vector ;
-  
   //Initial permutation
-  buffer2 = permutations( buffer1, 0 ) ;
+  buffer2 = permutations( ciphertext, 0 ) ;
   
   //fk2
   buffer1 = f_function( buffer2, k2 ) ;
@@ -196,7 +193,10 @@ unsigned char decrypt( unsigned char k1, unsigned char k2, unsigned char ciphert
   buffer1 = f_function( buffer2, k1 ) ;
   
   //Final Permutation
-  return permutations( buffer1, 1 ) ;
+  buffer2 = permutations( buffer1, 1 ) ;
+  
+  //Add to vector 
+  return buffer2 ^ vector ;
 }
 
 int main( int argc, char* argv[] )
@@ -206,6 +206,7 @@ int main( int argc, char* argv[] )
   unsigned char k1 ;
   unsigned char k2 ;
   unsigned char plaintext ;
+  unsigned char ciphertext ;
   unsigned char buffer1 ;
   unsigned char buffer2 ;
   FILE* input_file ;
@@ -231,19 +232,19 @@ int main( int argc, char* argv[] )
     }
     
     //read first byte
-    fread( &plaintext, 1, 1, input_file ) ;  
+    fread( &ciphertext, 1, 1, input_file ) ;  
 
     buffer1 = strtol( argv[3], 0, 2 ) ;
     
     while( !feof(input_file) )
     {
-      buffer2 = decrypt( k1, k2, plaintext, buffer1 ) ;
+      buffer2 = decrypt( k1, k2, ciphertext, buffer1 ) ;
 
       fwrite( &buffer2, 1, 1, output_file ) ;
       
-      fread( &plaintext, 1, 1, input_file ) ;
-
-      buffer1 = buffer2 ;   
+      buffer1 = ciphertext ; 
+      
+      fread( &ciphertext, 1, 1, input_file ) ;   
     }
     fclose( input_file ) ;
     fclose( output_file ) ; 
