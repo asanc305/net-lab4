@@ -5,6 +5,7 @@
 #define GetBit(var, bit) ((var & (1 << bit)) != 0)
 #define SetBit(var, bit) (var |= (1 << bit))
 
+//generate keys from initial key
 void key_generator( char* key, char* k1, char* k2 )
 {
   char p [10] = {key[4], key[1], key[6], key[3], key[2], key[0], key[8], key[7], key[5], key[9]} ;
@@ -32,7 +33,7 @@ unsigned int permutations( unsigned char x, int which )
   unsigned char result = 0 ;
   int i ;
   
-  if (which == 0)
+  if (which == 0) //initial permutation
   {
     for (i = 7; i >= 0 ; i--)
     {
@@ -40,7 +41,7 @@ unsigned int permutations( unsigned char x, int which )
         SetBit(result,i);
     }
   }
-  else if (which == 1)
+  else if (which == 1) //final permutation
   {
     for (i = 7; i >= 0 ; i--)
     {
@@ -48,7 +49,7 @@ unsigned int permutations( unsigned char x, int which )
         SetBit( result,i );
     }
   }
-  else if (which == 2)
+  else if (which == 2) //expand and permute
   {
     for (i = 7; i >= 0; i--)
     {
@@ -56,7 +57,7 @@ unsigned int permutations( unsigned char x, int which )
         SetBit( result,i );
     }
   }
-  else if (which == 3)
+  else if (which == 3) //p4 permutation
   {
     for (i = 3; i >= 0; i--)
     {
@@ -68,6 +69,7 @@ unsigned int permutations( unsigned char x, int which )
   return result ;
 }
 
+//returns 4bits from s boxes
 unsigned char s_box( int r0, int c0, int r1, int c1 )
 {
   int s0 [4][4] = { {1, 0, 3, 2}, {3, 2, 1, 0}, {0, 2, 1, 3}, {3, 1, 3, 2} } ;
@@ -212,16 +214,18 @@ int main( int argc, char* argv[] )
   FILE* input_file ;
   FILE* output_file ;
   
-  if (argc == 6 )
+  if (argc == 6 ) //decrypt
   {
+    printf("Decrypting...\n") ;
+    
     //Generate Keys
     key_generator( argv[2], key1, key2 ) ;
     k1 = strtol( key1, 0, 2 ) ;
     k2 = strtol( key2, 0, 2 ) ;
     
     //open files
-    input_file = fopen( argv[4], "rb" ) ;
-    output_file = fopen( argv[5], "wb" ) ;  
+    input_file = fopen( argv[4], "rb" ) ; 
+    output_file = fopen( argv[5], "wb" ) ;
     
     //check files
     if(input_file == NULL || output_file == NULL)
@@ -249,8 +253,9 @@ int main( int argc, char* argv[] )
     fclose( input_file ) ;
     fclose( output_file ) ; 
   } 
-  else
+  else if (argc == 5 ) //encrypt
   {
+    printf("Encrypting...\n") ;
     //Generate Keys
     key_generator( argv[1], key1, key2 ) ;
     k1 = strtol( key1, 0, 2 ) ;
@@ -285,5 +290,9 @@ int main( int argc, char* argv[] )
     fclose( input_file ) ;
     fclose( output_file ) ;
   }
+  else
+    printf("Usage: mycipher [-d] <init_key> <init_vector> <original_file> <result_file> \n") ; 
+  
+  return 0 ;
   
 }
